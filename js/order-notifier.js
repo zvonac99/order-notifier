@@ -5,32 +5,50 @@
 
     // Adaptivne varijable
     let currentInterval = parseInt(OrderNotifierData.interval, 10) * 1000;
-    let intervalStep = parseInt(OrderNotifierData.interval_step, 10) * 1000 || 60000;
+    let adaptiveStep = parseInt(OrderNotifierData.adaptive_step, 10) * 1000 || 60000;
     let maxInterval = 10 * 60 * 1000; // 10 min
     let idleCount = 0;
     let checkTimer = null;
 
-    // Dohvaćanje iz sessionStorage
-    function getSessions() {
-        storedOrderId = sessionStorage.getItem('last_order_id');
-        dismissedOrderId = sessionStorage.getItem('dismissed_order_id');
-        console.log('📦 Učitani session podaci:', { storedOrderId, dismissedOrderId });
+    // Cookie funkcije
+    function setCookie(name, value, minutes = 30) {
+        const d = new Date();
+        d.setTime(d.getTime() + (minutes * 60 * 1000));
+        document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+    }
+
+    function getCookie(name) {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const c = cookies[i].trim();
+            if (c.startsWith(name + '=')) {
+                return c.substring(name.length + 1);
+            }
+        }
+        return null;
+    }
+
+    function deleteCookie(name) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
     }
 
     // Provjera ID-a narudžbe
     function shouldReloadAndNotify(latestId) {
+        storedOrderId = getCookie('last_order_id');
+
         console.log('🔍 Provjeravam ID narudžbe:', latestId);
 
         if (!storedOrderId) {
-            sessionStorage.setItem('last_order_id', latestId);
+            setCookie('last_order_id', latestId);
             storedOrderId = latestId;
             console.log('🚚 Spremam prvi ID narudžbe:', latestId);
             return false;
         }
 
         if (parseInt(storedOrderId, 10) !== parseInt(latestId, 10)) {
-            sessionStorage.setItem('last_order_id', latestId);
+            setCookie('last_order_id', latestId);
             storedOrderId = latestId;
+            deleteCookie('dismissed_order_id');
             console.log('🔄 ID narudžbe se promijenio – potrebno reloadati.');
             return true;
         }
@@ -41,6 +59,8 @@
 
     // Prikaz obavijesti
     function showNotification(latestId) {
+        dismissedOrderId = getCookie('dismissed_order_id');
+
         if (parseInt(dismissedOrderId, 10) === parseInt(latestId, 10)) {
             console.log('❌ Obavijest je već bila zatvorena, ne prikazujem ponovno.');
             return false;
@@ -56,8 +76,8 @@
             "progressBar": true,
             "closeButton": true,
             "onCloseClick": function () {
-                console.log('🗂 Zatvorena obavijest, spremam ID.');
-                sessionStorage.setItem('dismissed_order_id', latestId);
+                console.log('🗂 Zatvorena obavijest, spremam ID u cookie.');
+                setCookie('dismissed_order_id', latestId);
             }
         };
 
@@ -81,8 +101,8 @@
         idleCount++;
         console.log(`Broj koraka ${idleCount}.`);
         if (idleCount >= parseInt(OrderNotifierData.adaptive_attempts, 10) && currentInterval < maxInterval) {
-            currentInterval += intervalStep;
-            console.log(`😴 Idle provjere: ${idleCount}. Novi interval: ${currentInterval / 1000}s`);
+            currentInterval += adaptiveStep;
+            console.log(`😴 Idle provjere: ${idleCount}. Novi interval: ${currentInterval / 1000}s (korak: ${adaptiveStep / 1000}s)`);
 
             clearInterval(checkTimer);
             checkTimer = setInterval(adaptiveCheck, currentInterval);
@@ -92,11 +112,9 @@
 
     // Provjera nakon reloadanja stranice
     function handlePageReload(latestId) {
-        // Provjera je li nova narudžba prisutna
         if (OrderNotifierData.reload_table === 'yes' && location.href.includes('edit.php?post_type=shop_order')) {
             console.log('🔁 Provjeravam je li nova narudžba prije reloadanja stranice...');
 
-            // Provjeri je li ID narudžbe promijenjen (ako je, znači nova narudžba je prisutna)
             if (shouldReloadAndNotify(latestId)) {
                 console.log('🔁 Osvježavam stranicu...');
                 location.reload();
@@ -109,32 +127,34 @@
     // Glavna funkcija za provjeru s adaptivnim intervalom
     function adaptiveCheck() {
         console.log('⏱ Adaptivna provjera narudžbi...');
-        
-        getSessions();
-        
+
+        storedOrderId = getCookie('last_order_id');
+        dismissedOrderId = getCookie('dismissed_order_id');
+        console.log('📦 Učitani cookie podaci:', { storedOrderId, dismissedOrderId });
+
         $.post(OrderNotifierData.ajax_url, {
             action: 'check_new_orders',
             last_check: lastCheck,
-            statuses: OrderNotifierData.statuses
+            statuses: OrderNotifierData.statuses,
+            nonce: OrderNotifierData.nonce
         }, function (response) {
             console.log('📬 Odgovor sa servera:', response);
-        
+
             const latestId = response.data.latest_id;
             const latestTime = response.data.latest_time;
-        
+
             if (response.success && (response.data.new_order || shouldReloadAndNotify(latestId))) {
                 lastCheck = latestTime;
-        
+
                 const prikazana = showNotification(latestId);
-        
+
                 if (prikazana) {
                     resetIdleCount();
                 }
-        
-                // Provjera za reload stranice
+
                 handlePageReload(latestId);
             }
-                adjustCheckInterval();
+            adjustCheckInterval();
         });
     }
 
