@@ -25,7 +25,7 @@ class WC_Order_Notifier {
 
         $screen      = get_current_screen();
         $scope       = $this->get_option( 'scope', 'orders_only' );
-        $reload      = $this->get_option( 'reload_table', 'no' );
+        // $reload      = $this->get_option( 'reload_table', 'no' );
         $is_orders   = $screen && $screen->id === 'edit-shop_order';
 
         if ( $scope === 'everywhere' || ( $scope === 'orders_only' && $is_orders ) ) {
@@ -43,21 +43,27 @@ class WC_Order_Notifier {
                 'adaptive_interval'=> $this->get_option( 'adaptive_interval', 'no' ),
                 'adaptive_attempts' => $this->get_option( 'adaptive_attempts', 5 ),
                 'adaptive_step'    => $this->get_option( 'adaptive_step', 60 ),
+                'nonce' => wp_create_nonce( 'check_new_orders_nonce' ),
             ]);
         }
     }
 
-    public function check_new_orders() {
-        $last_check = sanitize_text_field( $_POST['last_check'] ?? '' );
-        $statuses = $_POST['statuses'] ?? [ 'processing' ];
-
+    /* public function check_new_orders() {
+        if ( ! check_ajax_referer( 'check_new_orders_nonce', 'nonce', false ) ) {
+            wp_send_json_error( [ 'error' => 'Invalid nonce' ] );
+            return;
+        }
+    
+        // $last_check = sanitize_text_field( $_POST['last_check'] ?? '' );
+        $statuses = array_map( 'sanitize_text_field', (array) ($_POST['statuses'] ?? [ 'processing' ]) );
+    
         $args = [
             'limit' => 1,
             'orderby' => 'date',
             'order' => 'DESC',
-            'status' => $statuses
+            'status' => $statuses,
         ];
-
+    
         $orders = wc_get_orders( $args );
         if ( $orders && ! empty( $orders ) ) {
             $latest = $orders[0]->get_date_created()->date( 'c' );
@@ -65,10 +71,54 @@ class WC_Order_Notifier {
             wp_send_json_success([ 
                 'new_order' => true,
                 'latest_time' => $latest,
-                'latest_id' => $latest_id
+                'latest_id' => $latest_id,
             ]);
         }
+    
+        wp_send_json_success([ 'new_order' => false ]);
+    } */
 
+    public function check_new_orders() {
+        if ( ! check_ajax_referer( 'check_new_orders_nonce', 'nonce', false ) ) {
+            wp_send_json_error( [ 'error' => 'Invalid nonce' ] );
+            return;
+        }
+    
+        $last_check = sanitize_text_field( $_POST['last_check'] ?? '' );
+        $statuses = array_map( 'sanitize_text_field', (array) ($_POST['statuses'] ?? [ 'processing' ]) );
+    
+        // Provjera transijenta
+        $transient_key = 'wc_new_orders_' . implode('_', $statuses);
+        $cached_orders = get_transient($transient_key);
+    
+        if ($cached_orders !== false) {
+            // Ako imamo cache, koristimo ga
+            $orders = $cached_orders;
+        } else {
+            // Inače pozivamo bazu podataka
+            $args = [
+                'limit' => 1,
+                'orderby' => 'date',
+                'order' => 'DESC',
+                'status' => $statuses,
+            ];
+    
+            $orders = wc_get_orders( $args );
+    
+            // Spremajući rezultate u transijent, postavljamo vrijeme isteka
+            set_transient($transient_key, $orders, 5 * MINUTE_IN_SECONDS);
+        }
+    
+        if ( $orders && ! empty( $orders ) ) {
+            $latest = $orders[0]->get_date_created()->date( 'c' );
+            $latest_id = $orders[0]->get_id();
+            wp_send_json_success([ 
+                'new_order' => true,
+                'latest_time' => $latest,
+                'latest_id' => $latest_id,
+            ]);
+        }
+    
         wp_send_json_success([ 'new_order' => false ]);
     }
 
