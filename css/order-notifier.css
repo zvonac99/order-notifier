@@ -1,0 +1,15 @@
+.order-badge {
+    background: red;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    margin-left: 5px;
+    font-size: 11px;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
