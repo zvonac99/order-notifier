@@ -1,52 +1,69 @@
 # WC Order Notifier
 
-**WC Order Notifier** je WordPress/WooCommerce dodatak koji prikazuje vizualne obavijesti u admin sučelju kada stigne nova narudžba. Dizajniran je za shop managere i administratore kojima je važno brzo reagirati na nove narudžbe bez potrebe za ručnim osvježavanjem stranice.
+**HR 🇭🇷**  
+WooCommerce dodatak za prikaz obavijesti o novim narudžbama u administratorskom sučelju.  
+Praktično rješenje za shop managere koji žele odmah znati kada stigne nova narudžba bez potrebe za stalnim osvježavanjem stranice.
 
-![Toastr notification preview](https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css)
+**EN 🇬🇧**  
+A WooCommerce extension that displays real-time notifications about new orders in the admin area.  
+A practical solution for shop managers who want instant alerts when a new order is received without refreshing the page.
 
-## 🎯 Ključne značajke
+---
 
-- Prikaz notifikacija pomoću Toastr.js
-- Provjera statusa novih narudžbi pomoću AJAX-a
-- Mogućnost automatskog osvježavanja stranice narudžbi
-- Adaptivni interval provjere (manje opterećenje servera)
-- Postavke unutar WooCommerce > Postavke > Order Notifier
-- Stilizirana značkica s animacijom u admin sučelju
+## 🎯 Značajke / Features
 
-## ⚙️ Instalacija
+- 🔔 Toastr.js notifikacije o novim narudžbama
+- 🕒 Intervalno provjeravanje statusa narudžbi putem AJAX-a
+- ⚙️ WooCommerce sučelje za postavke
+- 🌐 Mogućnost prikaza notifikacija samo na stranici narudžbi ili svugdje u adminu
+- 📈 Adaptivni intervali (manje provjera kada nema aktivnosti)
+- 🔁 Opcionalni automatski reload WooCommerce narudžbi
 
-1. Preuzmi ili kloniraj repozitorij u `/wp-content/plugins/`:
-   ```bash
-   git clone https://github.com/zvonac99/order-notifier.git
-2. Aktiviraj dodatak kroz WordPress admin sučelje (Dodaci > Aktiviraj).
+---
 
-🔧 Konfiguracija
-Idi na WooCommerce > Postavke > Order Notifier i podesi sljedeće:
+## ⚙️ Instalacija / Installation
 
-Interval (sekundi) – koliko često se provjerava ima li novih narudžbi
+1. Preuzmite master.zip ili klonirajte repozitorij u `wp-content/plugins` direktorij:
+git clone https://github.com/zvonac99/order-notifier.git
 
-Statusi za praćenje – npr. processing, on-hold, completed
+2. Aktivirajte dodatak u **WordPress > Dodaci**.
+3. Idite na **WooCommerce > Settings > Order Notifier** za konfiguraciju.
 
-Prikaz notifikacija – samo na stranici narudžbi ili bilo gdje u adminu
+---
 
-Auto-refresh stranice – automatski ponovno učitaj listu narudžbi
+## 🛠️ Postavke / Settings
 
-Adaptivni interval – rasteže vrijeme između provjera ako nema aktivnosti
+U izborniku **WooCommerce > Settings > Order Notifier** dostupne su sljedeće opcije:
 
-Broj pokušaja i korak povećanja – detaljna kontrola adaptivnog ponašanja
+| Opcija / Option                | Opis / Description |
+|-------------------------------|--------------------|
+| Interval (sekundi) / Interval (seconds) | Vrijeme između provjera novih narudžbi / Time between order checks |
+| Statusi za praćenje / Tracked statuses | Koje statuse narudžbi plugin nadzire (npr. obrada, na čekanju) |
+| Prikaz notifikacija / Notification display scope | Samo na stranici narudžbi ili svugdje u adminu |
+| Auto-refresh stranice / Auto-refresh page | Automatski osvježi listu narudžbi kada stigne nova |
+| Adaptivni interval / Adaptive interval | Povećava razmak između provjera ako nema aktivnosti |
+| Pokušaji prije povećanja / Attempts before increasing | Koliko puta bez nove narudžbe prije povećanja intervala |
+| Korak povećanja / Step size | Za koliko sekundi se poveća interval |
 
-📦 Stilovi
-Dodatak koristi prilagođeni CSS za značkicu narudžbe
+---
 
-🛡️ Sigurnost
-AJAX zahtjevi za provjeru novih narudžbi zaštićeni su WordPress nonce-om
+## 👨‍💻 Razvoj / Development
 
-Korištenje current_user_id() i hash-a za korisnički tracking (lokalno)
+- PHP 7.4+
+- WordPress 6+
+- WooCommerce 7+
+- Toastr.js za notifikacije
+- AJAX i WP nonce sigurnost
 
-Nema spremanja korisničkih podataka
+---
 
-📅 Verzija
-Trenutna verzija: 1.5.0
+## 📝 Licenca / License
 
-🧑‍💻 Autor
-zvonac99
+.....
+
+---
+
+**Autor / Author:**  
+zvonac99  
+[github.com/zvonac99](https://github.com/zvonac99)
+
