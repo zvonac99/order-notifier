@@ -1,180 +1,172 @@
+/*!
+ * Order Notifier for WooCommerce Admin
+ * Version: 1.5
+ * Updated: 2025-04-28
+ * Author: zvonac99
+ */
+
 (function ($) {
+    const initialOrderId = parseInt(OrderNotifierData.first_order_id, 10) || 0;
     let lastCheck = new Date().toISOString();
     let storedOrderId = null;
     let dismissedOrderId = null;
 
-    // Adaptivne varijable
     let currentInterval = parseInt(OrderNotifierData.interval, 10) * 1000;
-    let adaptiveStep = parseInt(OrderNotifierData.adaptive_step, 10) * 1000 || 60000;
-    let maxInterval = 10 * 60 * 1000; // 10 min
+    const adaptiveStep = parseInt(OrderNotifierData.adaptive_step, 10) * 1000 || 60000;
+    const maxInterval = 10 * 60 * 1000;
     let idleCount = 0;
     let checkTimer = null;
 
-    // Cookie funkcije
-    function setCookie(name, value, minutes = 30) {
-        const d = new Date();
-        d.setTime(d.getTime() + (minutes * 60 * 1000));
-        document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
-    }
+    const orderBadgeSelector = '#toplevel_page_woocommerce ul.wp-submenu .order-badge';
 
-    function getCookie(name) {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const c = cookies[i].trim();
-            if (c.startsWith(name + '=')) {
-                return c.substring(name.length + 1);
+    const CookieManager = {
+        set(name, value, options = {}) {
+            let expires = '';
+            if (options.minutes) {
+                expires = new Date(Date.now() + options.minutes * 60 * 1000).toUTCString();
+            } else if (options.days) {
+                expires = new Date(Date.now() + options.days * 24 * 60 * 60 * 1000).toUTCString();
             }
+            document.cookie = `${name}=${encodeURIComponent(value)}; path=/${expires ? '; expires=' + expires : ''}`;
+        },
+        get(name) {
+            return document.cookie.split('; ').reduce((acc, cookie) => {
+                const [k, v] = cookie.split('=');
+                return k === name ? decodeURIComponent(v) : acc;
+            }, null);
+        },
+        delete(name) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
         }
-        return null;
+    };
+
+    const getDismissedCookieName = () => `dismissed_order_id_${OrderNotifierData.user_hash}`;
+    const getGlobalDismissCookieName = () => `global_dismiss_status_${OrderNotifierData.user_hash}`;
+
+    function updateStoredOrder(latestId) {
+        CookieManager.set('last_order_id', latestId, { days: 30 });
+        storedOrderId = latestId;
+        CookieManager.delete(getDismissedCookieName());
+        CookieManager.delete(getGlobalDismissCookieName());
     }
 
-    function deleteCookie(name) {
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-    }
-
-    // Provjera ID-a narudžbe
     function shouldReloadAndNotify(latestId) {
-        storedOrderId = getCookie('last_order_id');
+        storedOrderId = CookieManager.get('last_order_id');
 
-        console.log('🔍 Provjeravam ID narudžbe:', latestId);
-
-        if (!storedOrderId) {
-            setCookie('last_order_id', latestId);
-            storedOrderId = latestId;
-            console.log('🚚 Spremam prvi ID narudžbe:', latestId);
-            return false;
+        if (!storedOrderId || parseInt(storedOrderId, 10) < initialOrderId) {
+            CookieManager.set('last_order_id', initialOrderId, { days: 30 });
+            storedOrderId = initialOrderId;
         }
+
+        if (parseInt(latestId, 10) < initialOrderId) return false;
 
         if (parseInt(storedOrderId, 10) !== parseInt(latestId, 10)) {
-            setCookie('last_order_id', latestId);
-            storedOrderId = latestId;
-            deleteCookie('dismissed_order_id');
-            console.log('🔄 ID narudžbe se promijenio – potrebno reloadati.');
+            updateStoredOrder(latestId);
             return true;
         }
 
-        console.log('✅ ID narudžbe nije promijenjen.');
         return false;
     }
 
-    // Prikaz obavijesti
     function showNotification(latestId) {
-        dismissedOrderId = getCookie('dismissed_order_id');
+        dismissedOrderId = CookieManager.get(getDismissedCookieName());
+        const globalDismiss = CookieManager.get(getGlobalDismissCookieName()) || '';
 
-        if (parseInt(dismissedOrderId, 10) === parseInt(latestId, 10)) {
-            console.log('❌ Obavijest je već bila zatvorena, ne prikazujem ponovno.');
+        if (globalDismiss === 'dismissed' || parseInt(dismissedOrderId, 10) === parseInt(latestId, 10)) {
             return false;
         }
 
-        console.log('🛎 Prikazujem novu obavijest...');
-
         toastr.options = {
-            "positionClass": "toast-top-right",
-            "timeOut": "0",
-            "extendedTimeOut": "0",
-            "preventDuplicates": true,
-            "progressBar": true,
-            "closeButton": true,
-            "onCloseClick": function () {
-                console.log('🗂 Zatvorena obavijest, spremam ID u cookie.');
-                setCookie('dismissed_order_id', latestId);
+            positionClass: "toast-top-right",
+            timeOut: 0,
+            extendedTimeOut: 0,
+            preventDuplicates: true,
+            progressBar: true,
+            closeButton: true,
+            onCloseClick: () => {
+                CookieManager.set(getDismissedCookieName(), latestId);
+                CookieManager.set(getGlobalDismissCookieName(), 'dismissed', { days: 7 });
+                removeOrderBadge();
             }
         };
 
         toastr.info('Nova narudžba je stigla!', 'WooCommerce');
-
-        const menuLink = $('#toplevel_page_woocommerce ul.wp-submenu a[href*="edit.php?post_type=shop_order"]');
-        if (menuLink.length && !menuLink.find('.order-badge').length) {
-            menuLink.append('<span class="order-badge">●</span>');
-        }
+        addOrderBadge();
         return true;
     }
 
-    // Resetiranje intervala
+    function addOrderBadge() {
+        const menuLink = $('#toplevel_page_woocommerce ul.wp-submenu a[href*="edit.php?post_type=shop_order"]');
+        if (menuLink.length && !$(orderBadgeSelector).length) {
+            menuLink.append('<span class="order-badge">●</span>');
+        }
+    }
+
+    function removeOrderBadge() {
+        $(orderBadgeSelector).remove();
+    }
+
     function resetIdleCount() {
         idleCount = 0;
         currentInterval = parseInt(OrderNotifierData.interval, 10) * 1000;
     }
 
-    // Prilagodba intervala kada nema novih narudžbi
+    function restartCheckTimer() {
+        if (checkTimer) clearInterval(checkTimer);
+        checkTimer = setInterval(adaptiveCheck, currentInterval);
+    }
+
     function adjustCheckInterval() {
         idleCount++;
-        console.log(`Broj koraka ${idleCount}.`);
         if (idleCount >= parseInt(OrderNotifierData.adaptive_attempts, 10) && currentInterval < maxInterval) {
             currentInterval += adaptiveStep;
-            console.log(`😴 Idle provjere: ${idleCount}. Novi interval: ${currentInterval / 1000}s (korak: ${adaptiveStep / 1000}s)`);
-
-            clearInterval(checkTimer);
-            checkTimer = setInterval(adaptiveCheck, currentInterval);
+            restartCheckTimer();
             idleCount = 0;
         }
     }
 
-    // Provjera nakon reloadanja stranice
     function handlePageReload(latestId) {
         if (OrderNotifierData.reload_table === 'yes' && location.href.includes('edit.php?post_type=shop_order')) {
-            console.log('🔁 Provjeravam je li nova narudžba prije reloadanja stranice...');
-
             if (shouldReloadAndNotify(latestId)) {
-                console.log('🔁 Osvježavam stranicu...');
                 location.reload();
-            } else {
-                console.log('❌ Nema nove narudžbe. Stranica neće biti reloadana.');
             }
         }
     }
 
-    // Glavna funkcija za provjeru s adaptivnim intervalom
     function adaptiveCheck() {
-        console.log('⏱ Adaptivna provjera narudžbi...');
-
-        storedOrderId = getCookie('last_order_id');
-        dismissedOrderId = getCookie('dismissed_order_id');
-        console.log('📦 Učitani cookie podaci:', { storedOrderId, dismissedOrderId });
-
         $.post(OrderNotifierData.ajax_url, {
             action: 'check_new_orders',
             last_check: lastCheck,
             statuses: OrderNotifierData.statuses,
             nonce: OrderNotifierData.nonce
-        }, function (response) {
-            console.log('📬 Odgovor sa servera:', response);
-
-            const latestId = response.data.latest_id;
-            const latestTime = response.data.latest_time;
-
-            if (response.success && (response.data.new_order || shouldReloadAndNotify(latestId))) {
-                lastCheck = latestTime;
-
-                const prikazana = showNotification(latestId);
-
-                if (prikazana) {
-                    resetIdleCount();
+        }, (response) => {
+            if (response.success) {
+                const { latest_id: latestId, latest_time: latestTime, new_order } = response.data;
+                if (new_order || shouldReloadAndNotify(latestId)) {
+                    lastCheck = latestTime;
+                    const prikazana = showNotification(latestId);
+                    if (prikazana) resetIdleCount();
+                    handlePageReload(latestId);
                 }
-
-                handlePageReload(latestId);
             }
             adjustCheckInterval();
         });
     }
 
-    function resetAdaptiveInterval() {
-        if (checkTimer) clearInterval(checkTimer);
-        resetIdleCount();
-        checkTimer = setInterval(adaptiveCheck, currentInterval);
-    }
-
-    $(document).ready(function () {
-        console.log('🚀 Order notifier pokrenut.');
-
+    $(document).ready(() => {
         const isReload = performance.getEntriesByType("navigation")[0]?.type === "reload";
+        resetIdleCount();
 
+        if (!CookieManager.get('last_order_id')) {
+            CookieManager.set('last_order_id', initialOrderId, { days: 30 });
+            storedOrderId = initialOrderId;
+        }
+        
         if (isReload && location.href.includes('edit.php?post_type=shop_order')) {
-            console.log('♻️ Stranica narudžbi reloadana – resetiram interval.');
-            resetAdaptiveInterval();
+            restartCheckTimer();
         } else {
-            console.log('🟢 Pokrećem interval normalno.');
-            resetAdaptiveInterval();
+            restartCheckTimer();
         }
     });
+
 })(jQuery);
