@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WC Order Notifier
  * Description: Prikazuje obavijesti u adminu kada stignu nove narudžbe.
- * Version: 1.0.0
+ * Version: 1.5.0
  * Author: Tvoj Shop Dev Team
  */
 
@@ -25,8 +25,23 @@ class WC_Order_Notifier {
 
         $screen      = get_current_screen();
         $scope       = $this->get_option( 'scope', 'orders_only' );
-        // $reload      = $this->get_option( 'reload_table', 'no' );
         $is_orders   = $screen && $screen->id === 'edit-shop_order';
+
+        $installed_at = get_option('order_notifier_installed_at');
+        $installed_at_timestamp = strtotime($installed_at);
+
+        // Dohvaćanje prve valjane narudžbe
+        $args = [
+            'limit'        => 1,
+            'orderby'      => 'date',
+            'order'        => 'ASC',
+            'date_created' => date('Y-m-d H:i:s', $installed_at_timestamp),
+            'return'       => 'ids',
+        ];
+
+        $query = new WC_Order_Query($args);
+        $orders = $query->get_orders();
+        $first_order_id = !empty($orders) ? $orders[0] : 0;
 
         if ( $scope === 'everywhere' || ( $scope === 'orders_only' && $is_orders ) ) {
             wp_enqueue_script( 'toastr-js', 'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js', [], null, true );
@@ -44,39 +59,12 @@ class WC_Order_Notifier {
                 'adaptive_attempts' => $this->get_option( 'adaptive_attempts', 5 ),
                 'adaptive_step'    => $this->get_option( 'adaptive_step', 60 ),
                 'nonce' => wp_create_nonce( 'check_new_orders_nonce' ),
+                'current_user_id'  => get_current_user_id(),
+                'user_hash'        => substr( hash_hmac( 'sha256', get_current_user_id(), LOGGED_IN_SALT ), 0, 12 ),
+                'first_order_id'  => $first_order_id,
             ]);
         }
     }
-
-    /* public function check_new_orders() {
-        if ( ! check_ajax_referer( 'check_new_orders_nonce', 'nonce', false ) ) {
-            wp_send_json_error( [ 'error' => 'Invalid nonce' ] );
-            return;
-        }
-    
-        // $last_check = sanitize_text_field( $_POST['last_check'] ?? '' );
-        $statuses = array_map( 'sanitize_text_field', (array) ($_POST['statuses'] ?? [ 'processing' ]) );
-    
-        $args = [
-            'limit' => 1,
-            'orderby' => 'date',
-            'order' => 'DESC',
-            'status' => $statuses,
-        ];
-    
-        $orders = wc_get_orders( $args );
-        if ( $orders && ! empty( $orders ) ) {
-            $latest = $orders[0]->get_date_created()->date( 'c' );
-            $latest_id = $orders[0]->get_id();
-            wp_send_json_success([ 
-                'new_order' => true,
-                'latest_time' => $latest,
-                'latest_id' => $latest_id,
-            ]);
-        }
-    
-        wp_send_json_success([ 'new_order' => false ]);
-    } */
 
     public function check_new_orders() {
         if ( ! check_ajax_referer( 'check_new_orders_nonce', 'nonce', false ) ) {
@@ -88,14 +76,12 @@ class WC_Order_Notifier {
         $statuses = array_map( 'sanitize_text_field', (array) ($_POST['statuses'] ?? [ 'processing' ]) );
     
         // Provjera transijenta
-        $transient_key = 'wc_new_orders_' . implode('_', $statuses);
+        $transient_key = 'wc_new_orders_' . sanitize_key( implode('_', $statuses) );
         $cached_orders = get_transient($transient_key);
     
         if ($cached_orders !== false) {
-            // Ako imamo cache, koristimo ga
             $orders = $cached_orders;
         } else {
-            // Inače pozivamo bazu podataka
             $args = [
                 'limit' => 1,
                 'orderby' => 'date',
@@ -104,23 +90,40 @@ class WC_Order_Notifier {
             ];
     
             $orders = wc_get_orders( $args );
+            if ( ! empty( $orders ) ) {
+                $order = $orders[0];
+                $orders = [
+                    'id' => $order->get_id(),
+                    'date' => $order->get_date_created()->date('c'),
+                ];
+            }
     
-            // Spremajući rezultate u transijent, postavljamo vrijeme isteka
             set_transient($transient_key, $orders, 5 * MINUTE_IN_SECONDS);
         }
     
-        if ( $orders && ! empty( $orders ) ) {
-            $latest = $orders[0]->get_date_created()->date( 'c' );
-            $latest_id = $orders[0]->get_id();
-            wp_send_json_success([ 
-                'new_order' => true,
-                'latest_time' => $latest,
+        if ( ! empty( $orders ) && isset($orders['date']) && isset($orders['id']) ) {
+            $latest_time = $orders['date'];
+            $latest_id = $orders['id'];
+    
+            $new_order = true;
+    
+            if ( ! empty( $last_check ) ) {
+                $last_check_time = strtotime( $last_check );
+                $latest_order_time = strtotime( $latest_time );
+    
+                $new_order = $latest_order_time > $last_check_time;
+            }
+    
+            wp_send_json_success([
+                'new_order' => $new_order,
+                'latest_time' => $latest_time,
                 'latest_id' => $latest_id,
             ]);
         }
     
         wp_send_json_success([ 'new_order' => false ]);
     }
+    
 
     public function add_settings_tab( $tabs ) {
         $tabs['order_notifier'] = __( 'Order Notifier', 'wc-order-notifier' );
@@ -171,14 +174,14 @@ class WC_Order_Notifier {
                 'type'    => 'checkbox',
                 'id'      => self::OPTION_KEY . '[reload_table]',
                 'desc'    => __( 'Automatski osvježi stranicu narudžbi kada stigne nova narudžba (samo na stranici narudžbi)', 'wc-order-notifier' ),
-                'default' => 'no'
+                'default' => ''
             ],
             [
                 'name'    => __( 'Omogući adaptivni interval', 'wc-order-notifier' ),
                 'type'    => 'checkbox',
                 'id'      => self::OPTION_KEY . '[adaptive_interval]',
                 'desc'    => __( 'Automatski povećava razmak između provjera ako nema novih narudžbi.', 'wc-order-notifier' ),
-                'default' => 'no'
+                'default' => ''
             ],
             [
                 'name' => __( 'Broj pokušaja prije povećanja intervala', 'wc-order-notifier' ),
@@ -204,6 +207,15 @@ class WC_Order_Notifier {
     private function get_option( $key, $default = '' ) {
         $options = get_option( self::OPTION_KEY, [] );
         return $options[$key] ?? $default;
+    }
+    
+}
+
+register_activation_hook(__FILE__, 'order_notifier_activate');
+
+function order_notifier_activate() {
+    if (!get_option('order_notifier_installed_at')) {
+        update_option('order_notifier_installed_at', current_time('mysql'));
     }
 }
 
