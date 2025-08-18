@@ -1,0 +1,207 @@
+/* notifier.css */
+/* === Opći stil kontejnera === */
+.notifier-container {
+  z-index: 999;
+  position: fixed;
+  padding: 4px;
+  width: 350px;
+  max-width: 98%;
+  font-family: "Segoe UI", "Tahoma", "Calibri", "Verdana", sans-serif;
+  color: #333;
+  max-height: 100vh;
+  overflow-y: auto; /* Omogućuje scroll ako ima previše notifikacija */
+
+  box-sizing: border-box;
+}
+
+/* === Pozicije kontejnera === */
+.notifier-container-top-left {
+  top: 4px;
+  left: 164px;
+}
+
+.notifier-container-top-right {
+  top: 4px;
+  right: 4px;
+}
+
+/* Dodatne pozicije */
+.notifier-container-top-center {
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.notifier-container-bottom-right {
+  bottom: 4px;
+  right: 4px;
+}
+
+.notifier-container-bottom-left {
+  bottom: 4px;
+  left: 164px;
+}
+
+.notifier-container-bottom-center {
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* === Kompenzacija visine admin bara === */
+body.wp-admin .notifier-container-top-left, 
+body.wp-admin .notifier-container-top-right,
+body.wp-admin .notifier-container-top-center {
+  top: 92px;
+}
+
+@media screen and (max-width: 782px) {
+  body.wp-admin .notifier-container-top-left, 
+  body.wp-admin .notifier-container-top-right,
+  body.wp-admin .notifier-container-top-center {
+    top: 46px;
+  }
+}
+
+/* Osiguraj da svi elementi unutar kontejnera poštuju box-sizing */
+.notifier-container * {
+  box-sizing: border-box;
+}
+
+/* === Pojedinačna notifikacija === */
+.notifier {
+  position: relative;
+  width: 100%;
+  min-height: 62px;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: white;
+  border-left: 4px solid #95a5a6;
+  border-radius: 6px;
+  box-shadow: 0 1px 10px 0 rgba(0,0,0,.1), 0 2px 15px 0 rgba(0,0,0,.05);
+
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all .6s cubic-bezier(0.5, -0.5, 0.3, 1.4),
+              opacity .6s ease;
+}
+
+/* Prikaz animacije kad se notifikacija pojavi */
+.notifier.shown {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Animacija izlaska (koristi se u kombinaciji s .hiding klasom) */
+.notifier.hiding {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all .4s ease;
+}
+
+/* Ne mijenja se na hover jer želimo da ostane vidljiva */
+.notifier.shown:hover {
+  opacity: 1;
+}
+
+/* === Gumb za zatvaranje notifikacije === */
+.notifier-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  text-align: center;
+  color: #aaa;
+  font-weight: bold;
+  font-size: 16px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: .5;
+  transition: .3s ease;
+}
+
+.notifier-close:hover,
+.notifier-close:focus {
+  opacity: 1;
+  color: #999;
+  background: #eee;
+}
+
+/* === Slika unutar notifikacije === */
+.notifier-img {
+  float: left;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.img {
+  width: 48px;
+  height: 48px;
+}
+
+/* === Naslov i poruka === */
+.notifier-title {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: normal;
+}
+
+.notifier-body {
+  font-size: 13px;
+}
+
+/* === Tipovi notifikacija (boja lijevog ruba) === */
+.notifier.info {
+  border-left-color: #3498db;
+}
+
+.notifier.success {
+  border-left-color: #1abc9c;
+}
+
+.notifier.warning {
+  border-left-color: #f1c40f;
+}
+
+.notifier.error {
+  border-left-color: #e74c3c;
+}
+
+/* === Responsive prilagodba === */
+@media (max-width: 480px) {
+  .notifier-container {
+    width: 95%;
+    left: 2.5%;
+    right: auto;
+  }
+
+  .notifier {
+    min-height: 48px;
+    padding: 6px;
+  }
+
+  .img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .notifier-title {
+    font-size: 16px;
+  }
+
+  .notifier-body {
+    font-size: 12px;
+  }
+}
+
+/* === (Opcionalno) Tamna tema === */
+/* Aktivira se kad je npr. body.dark-mode */
+body.dark-mode .notifier {
+  background: #222;
+  color: #eee;
+  border-left-color: #555;
+}

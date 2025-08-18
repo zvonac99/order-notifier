@@ -1,0 +1,237 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-16 17:00+0200\n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: hr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+
+#: order-notifier.php:*
+msgid "Order Notifier requires WooCommerce to be installed and active."
+msgstr "Order Notifier zahtjeva da je WooCommerce instaliran i aktivan."
+
+msgid "WooCommerce is required for activation."
+msgstr "Za aktivaciju je potreban WooCommerce."
+
+#: admin/SettingsPage.php:*
+msgid "Order Notifier Settings"
+msgstr "Postavke za obavijesti o narudžbama"
+
+msgid "Order Notifier"
+msgstr "Obavijesti o narudžbama"
+
+msgid "Notification Settings"
+msgstr "Postavke obavijesti"
+
+msgid "Interval (seconds)"
+msgstr "Interval (sekunde)"
+
+msgid "Order Statuses to Track"
+msgstr "Statusi za praćenje"
+
+msgid "Notification Display"
+msgstr "Prikaži obavijesti"
+
+msgid "Only on Order Page"
+msgstr "Na stranici narudžbi"
+
+msgid "Everywhere in Admin"
+msgstr "Svugdje u admin području"
+
+msgid "Custom Message (Toastr)"
+msgstr "Prilagođena poruka (Toastr)"
+
+msgid "A new order has arrived!"
+msgstr "Imate novu narudžbu!"
+
+msgid "This message will appear in the notification when a new order arrives."
+msgstr "Ova poruka će se prikazati kada stigne nova narudžba."
+
+msgid "Auto-refresh Orders Table"
+msgstr "Automatsko osvježavanje stranice narudžbi"
+
+msgid "Automatically refresh the orders page when a new order arrives."
+msgstr "Automatski osvježi stranicu narudžbi kada stigne nova narudžba."
+
+msgid "Enable Ping"
+msgstr "Omogući ping"
+
+msgid "Send ping messages periodically to keep the connection alive."
+msgstr "Povremeno šaljite ping poruke kako biste održali vezu aktivnom."
+
+msgid "Ping Interval (seconds)"
+msgstr "Ping interval (sekunde)"
+
+msgid "How often to send ping messages (if enabled)."
+msgstr "Koliko često slati ping poruke (ako je omogućeno)."
+
+msgid "Enable Test Events"
+msgstr "Omogući testne događaje"
+
+msgid "Enable test messages to check if notifications are working."
+msgstr "Omogućite testne poruke kako biste provjerili rade li obavijesti."
+
+msgid "Default Notification Type"
+msgstr "Zadani tip poruke"
+
+msgid "Info"
+msgstr ""
+
+msgid "Success"
+msgstr ""
+
+msgid "Warning"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "Notification Position"
+msgstr "Pozicija obavijesti"
+
+msgid "Top Center"
+msgstr ""
+
+msgid "Top Right"
+msgstr ""
+
+msgid "Top Left"
+msgstr ""
+
+msgid "Bottom Center"
+msgstr ""
+
+msgid "Bottom Right"
+msgstr ""
+
+msgid "Bottom Left"
+msgstr ""
+
+msgid "Notification Icon (name or URL)"
+msgstr "Ikona obavijesti (naziv ili URL)"
+
+msgid "Optional icon name or full URL to image."
+msgstr "Naziv ikone (neobavezno) ili puni URL slike."
+
+msgid "Notification Timeout (s)"
+msgstr "Vrijeme trajanja obavijesti"
+
+msgid "Time in seconds before notification disappears. 0 means no timeout."
+msgstr ""
+"Vrijeme u sekundama prije nego što obavijest nestane. 0 znači da nema "
+"vremenskog ograničenja."
+
+msgid "Max Notifications Displayed"
+msgstr "Maksimalni broj poruka za prikaz"
+
+msgid "Maximum number of notifications shown simultaneously."
+msgstr "Maksimalan broj istovremeno prikazanih obavijesti."
+
+msgid "Allowed User Roles"
+msgstr "Dopuštene korisničke uloge"
+
+msgid "Select roles allowed to receive order notifications."
+msgstr "Odaberite uloge kojima je dopušteno primati obavijesti o narudžbi."
+
+msgid "Administrator"
+msgstr ""
+
+msgid "Shop Manager"
+msgstr ""
+
+msgid "Editor"
+msgstr ""
+
+msgid "Author"
+msgstr ""
+
+msgid "Contributor"
+msgstr ""
+
+msgid "Subscriber"
+msgstr ""
+
+msgid "Save Settings"
+msgstr "Spremi postavke"
+
+msgid "Open Debug Log"
+msgstr "Otvori debug log stranicu"
+
+#: admin/DebugPage.php:*
+msgid "Debug Log"
+msgstr "Zapisnik o otklanjanju pogrešaka"
+
+msgid "Archived Logs"
+msgstr "Arhivirani logovi"
+
+msgid "Select archived log:"
+msgstr "Odaberite arhivirani log:"
+
+msgid "-- Select log file --"
+msgstr "-- Odaberite log datoteku --"
+
+msgid "Load"
+msgstr "Učitaj"
+
+msgid "Delete"
+msgstr "Obriši"
+
+msgid "Current Log"
+msgstr "Trenutni log"
+
+msgid "Refresh Log"
+msgstr "Osvježi log"
+
+msgid "Back to settings"
+msgstr "Natrag na postavke"
+
+msgid "Delete current log"
+msgstr "Obriši trenutni log"
+
+msgid "Failed to delete log."
+msgstr "Neuspješno brisanje log zapisa."
+
+msgid "The log file name is missing."
+msgstr "Nedostaje naziv log datoteke."
+
+msgid "The file does not exist or is not an archived log file."
+msgstr "Datoteka ne postoji ili nije arhivirana log datoteka."
+
+msgid "The file does not exist."
+msgstr "Datoteka ne postoji."
+
+msgid "Delete failed."
+msgstr "Neuspješno brisanje."
+
+#~ msgid "Enable Adaptive Interval"
+#~ msgstr "Omogući prilagodljivi interval"
+
+#~ msgid "Automatically increase the interval if no new orders are found."
+#~ msgstr "Automatski povećaj interval kada nema novih narudžbi."
+
+#~ msgid "Number of Attempts Before Increasing Interval"
+#~ msgstr "Pokušaja prije povećanja intervala"
+
+#~ msgid ""
+#~ "How many times to check without a new order before increasing the "
+#~ "interval."
+#~ msgstr ""
+#~ "Koliko puta provjeriti bez novih narudžbi prije povećanja intervala."
+
+#~ msgid "Step Increase (seconds)"
+#~ msgstr "Korak povećanja (sekundi)"
+
+#~ msgid "How many seconds to add for every X unsuccessful attempts."
+#~ msgstr "Koliko sekundi dodati u svakom koraku povećanja."
+
+#~ msgid "Order Notifier - Settings"
+#~ msgstr "Obavijesti o narudžbama - Postavke"
+
+#~ msgid "Orders page only"
+#~ msgstr "Samo na stranici narudžbi"

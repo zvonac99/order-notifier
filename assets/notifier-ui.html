@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <title>Notifikacije narudžbi</title>
+  <style>
+    /* Glavna notifikacija (Notifier koristi svoj stil, ovo je samo primjer ako trebaš override) */
+    .notifier-custom {
+      bottom: 20px;
+      background-color: #333;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    /* Traka sažetka narudžbi */
+    #orderBar {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #0073aa;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: sans-serif;
+      font-size: 15px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    #orderBar.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .order-count {
+      background: white;
+      color: #0073aa;
+      font-weight: bold;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Traka sažetka narudžbi -->
+  <div id="orderBar">
+    <div class="order-count" id="orderCount">1</div>
+    <div>Novih narudžbi</div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const orderBar = document.getElementById('orderBar');
+      const orderCountEl = document.getElementById('orderCount');
+
+      let orderCount = 0;
+
+      // Funkcija za prikaz trake sažetka
+      function showOrderBar(count) {
+        orderCountEl.textContent = count;
+        orderBar.classList.add('show');
+        orderBar.style.transform = 'translateX(-50%) translateY(0)';
+      }
+
+      // Funkcija za skrivanje trake s animacijom prema gore
+      function hideOrderBar() {
+        orderBar.style.transform = 'translateX(-50%) translateY(-50px)';
+        orderBar.style.opacity = '0';
+        setTimeout(() => {
+          orderBar.classList.remove('show');
+        }, 500);
+      }
+
+      // Simulacija primanja nove narudžbe
+      function newOrderReceived(customerName) {
+        orderCount++;
+
+        // Prikaz glavne obavijesti pomoću Notifier.js
+        const notification = new Notifier();
+        notification.setText(`${customerName} je izvršila narudžbu`);
+        notification.setPosition('bottom');
+        notification.show();
+
+        // Sakrijemo traku da bismo je kasnije osvježili s novim brojem
+        hideOrderBar();
+
+        // Nakon nekoliko sekundi (npr. 5s), ponovo prikaži ažuriranu traku
+        setTimeout(() => {
+          showOrderBar(orderCount);
+        }, 6000);
+      }
+
+      // Simulacija događaja nakon 2s i 10s
+      setTimeout(() => newOrderReceived("Ivana Horvat"), 2000);
+      setTimeout(() => newOrderReceived("Marko Kovačić"), 10000);
+    });
+  </script>
+  
+  <!-- Pretpostavka: Notifier.js je već učitan u stranici -->
+</body>
+</html>

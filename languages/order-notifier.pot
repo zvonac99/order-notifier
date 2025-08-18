@@ -1,0 +1,211 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WooCommerce Order Notifier\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-16 17:00+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: ChatGPT\n"
+
+#: order-notifier.php:*
+msgid "Order Notifier requires WooCommerce to be installed and active."
+msgstr ""
+
+msgid "WooCommerce is required for activation."
+msgstr ""
+
+#: admin/SettingsPage.php:*
+msgid "Order Notifier Settings"
+msgstr ""
+
+msgid "Order Notifier"
+msgstr ""
+
+msgid "Notification Settings"
+msgstr ""
+
+msgid "Interval (seconds)"
+msgstr ""
+
+msgid "Order Statuses to Track"
+msgstr ""
+
+msgid "Notification Display"
+msgstr ""
+
+msgid "Only on Order Page"
+msgstr ""
+
+msgid "Everywhere in Admin"
+msgstr ""
+
+msgid "Custom Message (Toastr)"
+msgstr ""
+
+msgid "A new order has arrived!"
+msgstr ""
+
+msgid "This message will appear in the notification when a new order arrives."
+msgstr ""
+
+msgid "Auto-refresh Orders Table"
+msgstr ""
+
+msgid "Automatically refresh the orders page when a new order arrives."
+msgstr ""
+
+msgid "Enable Ping"
+msgstr ""
+
+msgid "Send ping messages periodically to keep the connection alive."
+msgstr ""
+
+msgid "Ping Interval (seconds)"
+msgstr ""
+
+msgid "How often to send ping messages (if enabled)."
+msgstr ""
+
+msgid "Enable Test Events"
+msgstr ""
+
+msgid "Enable test messages to check if notifications are working."
+msgstr ""
+
+msgid "Default Notification Type"
+msgstr ""
+
+msgid "Info"
+msgstr ""
+
+msgid "Success"
+msgstr ""
+
+msgid "Warning"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "Notification Position"
+msgstr ""
+
+msgid "Top Center"
+msgstr ""
+
+msgid "Top Right"
+msgstr ""
+
+msgid "Top Left"
+msgstr ""
+
+msgid "Bottom Center"
+msgstr ""
+
+msgid "Bottom Right"
+msgstr ""
+
+msgid "Bottom Left"
+msgstr ""
+
+msgid "Notification Icon (name or URL)"
+msgstr ""
+
+msgid "Optional icon name or full URL to image."
+msgstr ""
+
+msgid "Notification Timeout (s)"
+msgstr ""
+
+msgid "Time in seconds before notification disappears. 0 means no timeout."
+msgstr ""
+
+msgid "Max Notifications Displayed"
+msgstr ""
+
+msgid "Maximum number of notifications shown simultaneously."
+msgstr ""
+
+msgid "Allowed User Roles"
+msgstr ""
+
+msgid "Select roles allowed to receive order notifications."
+msgstr ""
+
+msgid "Administrator"
+msgstr ""
+
+msgid "Shop Manager"
+msgstr ""
+
+msgid "Editor"
+msgstr ""
+
+msgid "Author"
+msgstr ""
+
+msgid "Contributor"
+msgstr ""
+
+msgid "Subscriber"
+msgstr ""
+
+msgid "Save Settings"
+msgstr ""
+
+msgid "Open Debug Log"
+msgstr ""
+
+#: admin/DebugPage.php:*
+msgid "Debug Log"
+msgstr ""
+
+msgid "Archived Logs"
+msgstr ""
+
+msgid "Select archived log:"
+msgstr ""
+
+msgid "-- Select log file --"
+msgstr ""
+
+msgid "Load"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Current Log"
+msgstr ""
+
+msgid "Refresh Log"
+msgstr ""
+
+msgid "Back to settings"
+msgstr ""
+
+msgid "Delete current log"
+msgstr ""
+
+msgid "Failed to delete log."
+msgstr ""
+
+msgid "The log file name is missing."
+msgstr ""
+
+msgid "The file does not exist or is not an archived log file."
+msgstr ""
+
+msgid "The file does not exist."
+msgstr ""
+
+msgid "The log file name is missing."
+msgstr ""
+
+msgid "Delete failed."
+msgstr ""
