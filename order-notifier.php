@@ -41,7 +41,7 @@ require_once ORDER_NOTIFIER_DIR . 'src/Autoloader.php';
 
 $autoloader = new \OrderNotifier\Autoloader();
 $autoloader->addNamespace('OrderNotifier', ORDER_NOTIFIER_DIR . 'src');
-$autoloader->addNamespace('EliasHaeussler\\SSE', ORDER_NOTIFIER_DIR . 'includes/EliasHaeussler/SSE');
+$autoloader->addNamespace('EliasHaeussler\\SSE', ORDER_NOTIFIER_DIR . 'third-party/EliasHaeussler/SSE');
 $autoloader->register();
 
 use OrderNotifier\PluginCore;
