@@ -55,7 +55,6 @@ class HooksLoader {
 		if (!is_array($this->executed)) {
 			$this->executed = [];
 		}
-        Debug::log('Izvršeni hookovi:', $this->executed);
     }
 	
 	/**

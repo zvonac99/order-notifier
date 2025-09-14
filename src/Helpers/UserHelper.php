@@ -37,9 +37,21 @@ class UserHelper {
 	 * }
 	 */
 	public static function get_current_user_context(): array {
+		// Ako nije logiran ili nismo u admin području, vrati guest kontekst
+		/* if (!is_user_logged_in() || !is_admin()) {
+			return [
+				'user_id'    => null,
+				'username'   => 'guest',
+				'role'       => 'guest',
+				'authorized' => false,
+			];
+		} */
+
+		// Za admin korisnike, proslijedi WP_User objekt u originalnu funkciju
 		$user = wp_get_current_user();
 		return self::get_user_context($user);
 	}
+
 
 	/**
 	 * Dohvaća kontekst korisnika po korisničkom imenu (loginu).
@@ -119,7 +131,7 @@ class UserHelper {
     public static function clear_user_context(): void {
         // StorageHelper::delete_user_meta($user_id, Constants::USER_CONTEXT_KEY);
 		// StorageHelper::set_session(Constants::SESSION_SCREEN_ID, 0);
-		 StorageHelper::delete_transient(Constants::ON_TRANSIENT_HOOKS);
+		StorageHelper::delete_transient(Constants::ON_TRANSIENT_HOOKS);
 		StorageHelper::delete_transient(Constants::SESSION_SCREEN_ID);
 		Debug::log("Korisnik odjavljen - screen ID izbrisan iz sesije i transienta (via wp_logout).");
     }

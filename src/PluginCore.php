@@ -83,17 +83,6 @@ PluginCore::__construct()
   └─ register_hooks_from_class() → registrira sve WP hookove kroz loader
 
 WordPress izvršava hookove u svojem redoslijedu
-  ├─ plugins_loaded (Locale)
-  ├─ current_screen (ScreenHelper)
-  ├─ admin_menu (SettingsPage)
-  ├─ admin_head (PluginBootstrapper)
-  ├─ admin_init (SettingsPage)
-  ├─ admin_enqueue_scripts (PluginAsset)
-  ├─ woocommerce_order_status_changed (OrderEventService)
-  ├─ woocommerce_new_order (OrderEventService)
-  ├─ rest_api_init (SSE)
-
-REST endpoint (/stream) aktivira SSE stream
 
 | Događaj                            | Izvršava se (callback)                               | Opis                                  	|
 | ---------------------------------- | ---------------------------------------------------- | ----------------------------------------- |
@@ -114,20 +103,16 @@ REST endpoint (/stream) aktivira SSE stream
 namespace OrderNotifier;
 
 use OrderNotifier\HooksLoader;
+use OrderNotifier\PluginAssets;
 use OrderNotifier\Admin\SettingsPage;
 use OrderNotifier\Admin\DebugPage;
-use OrderNotifier\i18n\Locale;
-use OrderNotifier\PluginAssets;
-use EliasHaeussler\SSE\SseCore;
-use OrderNotifier\Service\PluginBootstrapper;
-use OrderNotifier\Utils\Debug;
 use OrderNotifier\Helpers\ScreenHelper;
 use OrderNotifier\Helpers\UserHelper;
+use OrderNotifier\i18n\Locale;
+use OrderNotifier\SSE\SseCore;
+use OrderNotifier\Service\PluginBootstrapper;
 use OrderNotifier\Service\OrderEventService;
-
-use WP_User;
-// Za testiranje registriranja endpointa
-use WP_REST_Response;
+use OrderNotifier\Utils\Debug;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -150,14 +135,12 @@ class PluginCore {
 	 * Konstruktor.
 	 */
 	public function __construct() {
-		$this->register_classes_for_all();
+		$this->register_classes();
 		$this->register_hooks_for_all();
 		Debug::log("Inicijalizirane klase i hookovi za sve");
 
 		$context = UserHelper::get_current_user_context();
 		 if ( $context['authorized'] ) {
-			// $this->maybe_clear_screen_hooks();
-			$this->register_classes();
 			$this->register_hooks_from_class_once();
 			$this->register_hooks_from_class();
 			Debug::log("Plugin inicijalizira hookove za prijavljenog korisnika: {$context['username']} (uloga: {$context['role']})");
@@ -166,21 +149,16 @@ class PluginCore {
 		}
 	}
 
-
-	private function register_classes_for_all() {
-		$this->loader       = new HooksLoader();
-		$this->sse 			= new SseCore();
-		$this->pluginassets = new PluginAssets();
-		Debug::log("Registriranje klasa koje se uvjek pokreću");
-	}
-
 	private function register_classes() {
+		$this->loader       = new HooksLoader();
+		$this->sse          = new SseCore();
+		$this->pluginassets = new PluginAssets();
 		$this->settingspage = new SettingsPage();
-		$this->debugpage 	= new DebugPage();
-		// $this->pluginassets = new PluginAssets();
+		$this->debugpage    = new DebugPage();
 
-		Debug::log("Registriranje ostalih potrebnih klasa");
+		Debug::log("Inicijalizirane sve klase");
 	}
+
 
 	private function register_hooks_for_all() {
 		// SSE REST route
@@ -209,8 +187,6 @@ class PluginCore {
 
 		// Stranica postavki
 		$this->loader->add_action('admin_menu', $this->settingspage, 'add_settings_page');
-		// Filter ne radi
-		// $this->loader->add_filter(Constants::ON_PLUGIN_SETTINGS_HOOK, SettingsPage::class, 'get_settings_fields' );
 		$this->loader->add_action('admin_init', $this->settingspage, 'register_settings');
 
 		// Debug stranica

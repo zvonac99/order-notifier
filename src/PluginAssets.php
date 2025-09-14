@@ -161,7 +161,7 @@ class PluginAssets {
             ORDER_NOTIFIER_URL . 'assets/js/custom.js',
             [
                 ['id' => '@order-notifier/BroadcastChannelHandler', 'import' => 'static'],
-                ['id' => '@order-notifier/storage-utils', 'import' => 'static'],
+                // ['id' => '@order-notifier/storage-utils', 'import' => 'static'],
                 ['id' => '@order-notifier/config', 'import' => 'static'],
             ]
         );
