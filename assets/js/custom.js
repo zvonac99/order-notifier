@@ -1,16 +1,25 @@
 import BroadcastChannelHandler from '@order-notifier/BroadcastChannelHandler';
-import {
-    getParsedStorageItem,
-    setStringifiedStorageItem,
-    removeStorageItem,
-    // getParsedCookieObject,
-    // updateCookieField,
-} from '@order-notifier/storage-utils';
 import { OrderNotifierData } from '@order-notifier/config';
 
-
 const channel = new BroadcastChannelHandler('order-notifier');
-const RELOAD_PAYLOAD_KEY = 'orderNotifierReloadPayload';
+
+/**
+ * Cookie helper funkcije
+ */
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+function setCookie(name, value, maxAge = 300, path = "/") {
+    document.cookie = `${name}=${value}; max-age=${maxAge}; path=${path}`;
+}
+
+function deleteCookie(name, path = "/") {
+    document.cookie = `${name}=; max-age=0; path=${path}`;
+}
 
 /**
  * Prikazuje notifikaciju s danim parametrima.
@@ -62,36 +71,69 @@ function handleMessageEvent(payload) {
 }
 
 /**
- * Sprema payload i pokreće reload.
+ * Handshake s cookie logikom
  */
-function saveReloadPayload(payload) {
-    if (!payload) return;
+function ReloadPage(data) {
+    if (!data.uid) {
+        console.warn("Nema UID u payloadu", data);
+        return;
+    }
 
-    setStringifiedStorageItem(RELOAD_PAYLOAD_KEY, payload);
+    const cookieName = data.uid;
+    const existingCookie = getCookie(cookieName);
 
-    // Provjeri ima li URL admin.php?page=wc-orders u query stringu
-    if (window.location.href.indexOf('admin.php?page=wc-orders') !== -1) {
-        console.log('Pokrećem reload - stranica narudžbi');
-        location.reload();
-    } else {
-        checkAndShowReloadPayload();
-        console.log('Reload preskočen jer trenutni URL nije stranica narudžbi');
+    if (existingCookie === null) {
+        console.log(`Novi event UID ${cookieName}, postavljam cookie=0`);
+        setCookie(cookieName, 0, 300);
+
+        if (window.location.href.includes('admin.php?page=wc-orders')) {
+            location.reload();
+            return;
+        } else {
+            console.log('Reload preskočen (nije stranica narudžbi)');
+        }
+    }
+
+    if (existingCookie === "0") {
+        console.log(`Prikazujem payload za UID ${cookieName} i označavam cookie=1`);
+        handleMessageEvent(data.payload);
+        setCookie(cookieName, 1, 300);
+        return;
+    }
+
+    if (existingCookie === "1") {
+        console.log(`UID ${cookieName} već procesuiran, ništa ne radim`);
     }
 }
 
+/**
+ * Odlučuje kako obraditi event tipa 'message'.
+ */
+function handleMessageOrReload(data) {
+    if (data.reload) {
+        ReloadPage(data);
+    } else {
+        channel.send('message', data.payload);
+        handleMessageEvent(data.payload);
+        setCookie(data.uid, 1, 300);
+        console.log('Event prikazan i emitiran u druge tabove bez reloada');
+    }
+}
 
 /**
- * Provjerava postoji li spremljeni payload i prikazuje ga.
+ * Obrada sistemskih eventa tipa ping/heartbeat
  */
-function checkAndShowReloadPayload() {
-    const payload = getParsedStorageItem(RELOAD_PAYLOAD_KEY);
-    if (payload) {
-        // Emitiraj prema ostalim tabovima
-        channel.send('message', payload);
-
-        handleMessageEvent(payload);
-        removeStorageItem(RELOAD_PAYLOAD_KEY); // Isključeno za test
-        console.log('Payload prikazan nakon reloada');
+function handleSystemEvent(data) {
+    switch (data.type) {
+        case 'ping':
+            console.log('%cEvent tip: system-ping', 'color: orange; font-weight: bold;', data);
+            // console.log('Primljen system-ping:', data);
+            break;
+        case 'heartbeat':
+            console.log('Primljen system-heartbeat:', data);
+            break;
+        default:
+            console.log('Nepoznati sistemski tip:', data);
     }
 }
 
@@ -104,42 +146,28 @@ function initSSE() {
         return;
     }
 
-    checkAndShowReloadPayload();
-
     const source = new EventSource(`${OrderNotifierData.endpoint}?_wpnonce=${OrderNotifierData.nonce}`);
 
     source.addEventListener('event', e => {
         try {
             const data = JSON.parse(e.data);
-            console.log('RAW Podatci', data);
+            console.log('%cSSE Event RAW:', 'color: green; font-weight: bold;', data);
 
             if (data.event_type === 'message') {
-                if (data.reload) {
-                    saveReloadPayload(data.payload);
-                } else {
-                    channel.send('message', data.payload);
-                    handleMessageEvent(data.payload);
-                    console.log('Emitirano u druge tabove bez reloada');
-                }
+                // console.log('%cEvent tip: message', 'color: green; font-weight: bold;');
+                // console.log('UID:', data.uid);
+                // console.log('Payload:', data.payload);
+                // console.log('Reload:', data.reload);
 
+                handleMessageOrReload(data);
             } else if (data.event_type === 'system') {
-                switch (data.type) {
-                    case 'ping':
-                        console.log('Primljen system-ping:', data);
-                        break;
-                    case 'heartbeat':
-                        console.log('Primljen system-heartbeat:', data);
-                        break;
-                    default:
-                        console.log('Nepoznati sistemski tip:', data);
-                }
+                handleSystemEvent(data);
             }
 
         } catch (error) {
             console.error('Greška pri parsiranju SSE eventa:', error);
         }
     });
-
 
     source.onerror = event => {
         if (event?.target?.readyState === EventSource.CLOSED) {
@@ -153,9 +181,7 @@ function initSSE() {
 }
 
 // Slušaj poruke s kanala
-channel.on('message', (payload) => {
-    // if (document.visibilityState !== 'visible') return;
-
+channel.on('message', payload => {
     console.log(`channel.on('message')`, payload);
     handleMessageEvent(payload);
     removeStorageItem(RELOAD_PAYLOAD_KEY); // Test

@@ -14,8 +14,8 @@ if (!defined('ABSPATH')) {
 
 class OrderEventService {
     /**
-     * Priprema i šalje SSE događaj za novu narudžbu.
-     * Ako je korisnik prijavljen, događaj ide odmah; u suprotnom se sprema u buffer.
+     * Priprema i sprema SSE događaj za novu narudžbu u json buffer.
+     * Ako je korisnik prijavljen, događaj ide odmah (SSE loop), u suprotnom se sprema u buffer.
      *
      * @param int   $order_id  ID nove narudžbe.
      * @param array $meta_keys Dodatni meta podaci koje treba uključiti u event (opcionalno).
@@ -62,6 +62,7 @@ class OrderEventService {
      * Sprema pojedini događaj u centralni JSON buffer (SSE sustav).
      *
      * @param array $event_meta Meta podaci o događaju, npr.:
+     *                          NAPOMENA: trenutno koristimo za sve evente, event_type' "message" zbog js logike
      *                          - 'event_type' => string (npr. 'new-order')
      *                          - 'order_id'   => int (opcionalno, za UID)
      *                          - dodatni ključevI po potrebi
@@ -78,25 +79,9 @@ class OrderEventService {
         self::send_event_via_buffer($payload, $event_meta);
 
         if (isset($event_meta['order_id'])) {
-            self::update_user_last_seen_order_id($event_meta['order_id']);
             self::cleanup_old_order_events();
+            Debug::log('Pozivamo funkciju za čišćenje starih eventa');
         }
-    }
-
-     private static function update_user_last_seen_order_id(int $order_id): void {
-        $ctx = UserHelper::get_current_user_context();
-        // Provjera dali je korisnik autoriziran
-        if (! $ctx['authorized']) {
-            return;
-        }
-        $user_id = $ctx['user_id'];
-        $context = StorageHelper::get_user_meta($user_id, Constants::ON_USER_CONTEXT_KEY);
-        if (!is_array($context)) {
-            $context = [];
-        }
-        $context['last_seen_order_id'] = $order_id;
-        StorageHelper::set_user_meta($user_id, Constants::ON_USER_CONTEXT_KEY, $context);
-        Debug::log('Ažuriram meta tablicu sa korisnikovim id-om i id narudžbe');
     }
 
     /**
@@ -137,12 +122,12 @@ class OrderEventService {
      * @return void
      */
     protected static function send_event_via_buffer(array $payload, array $event_meta): void {
-        Debug::log('Početak funkcije send_event..');
         Debug::log('Pozivam funkciju get_buffer..');
         $buffer = self::get_or_initialize_buffer();
         Debug::log('Pozivam funkciju prepare_event..');
         $event = self::prepare_event($payload, $event_meta);
 
+        // Ovaj dio treba provjeriti dali radi Factory istu stvar
         Debug::log('Pozivam funkciju find existing event..');
         $existing_event = self::find_existing_event($event, $buffer['events']);
        
@@ -166,7 +151,7 @@ class OrderEventService {
      * @return array Trenutni buffer s eventima
      */
     private static function get_or_initialize_buffer(): array {
-        Debug::log('Početak funkcije get_buffer..');
+       
         $buffer = StorageHelper::get_json_buffer();
         // Debug::log('get_json_buffer', $buffer);
         if (!is_array($buffer)) {
@@ -174,6 +159,7 @@ class OrderEventService {
                 'events' => [],
             ];
         }
+        Debug::log('Inicijaliziran JSON buffer.');
 
         return $buffer;
     }
@@ -186,7 +172,6 @@ class OrderEventService {
      * @return array Strukturirani event spreman za spremanje
      */
     private static function prepare_event(array $payload, array $event_meta): array {
-        Debug::log('Funkcija prepare_event..');
         $event = [];
 
         $event['timestamp'] = time();
@@ -197,8 +182,6 @@ class OrderEventService {
             $event['uid'] = sha1(json_encode($event_meta) . uniqid('', true));
         }
 
-        // $roles = StorageHelper::get_option('allowed_roles', []);
-        // $event['is_processed'] = array_fill_keys($roles, false); // Prati se po korisniku
         $event['is_processed'] = false;
 
         // Spoji $event_meta direktno u glavni event niz
@@ -232,7 +215,7 @@ class OrderEventService {
         return null;
     }
 
-    /**
+    /** Ovu funkciju treba provjeriti dali treba ostati u ovom obliku
      * Briše sve prethodne 'new-order' događaje i ostavlja samo zadnji.
      *
      * @return void

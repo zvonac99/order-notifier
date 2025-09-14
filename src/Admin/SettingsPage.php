@@ -198,6 +198,7 @@ class SettingsPage {
                 'min'     => 0,
                 'max'     => 60000,
                 'multiplier' => 1000,
+                'tooltip'    => 'Vrijednost se unosi u sekundama; u bazi se sprema u milisekundama.',
             ],
             'max_notifications' => [
                 'label'   => __( 'Max Notifications Displayed', Constants::ON_TEXT_DOMAIN ),
@@ -242,17 +243,25 @@ class SettingsPage {
 
     /**
      * [Description for render_field]
-     *
-     * @param mixed $field
-     * 
-     * @return [type]
      * 
      */
-    public function render_field( $field ) {
-        $key = $field['key'];
+    /**
+     * Renderira HTML input za pojedino polje, uz podršku za tooltip.
+     *
+     * @param array $field Polje s ključem i argumentima
+     * 
+     * @return [type]
+     */
+    public function render_field( $field ) { 
+        $key  = $field['key'];
         $args = $field['args'];
-        $value = StorageHelper::get_option($field['key'], $field['default'] ?? null );
 
+        // Dohvati vrijednost
+        $raw_value = StorageHelper::get_option( $field['key'], $field['default'] ?? null );
+        $value     = $this->render_value_for_field( $key, $raw_value, $args );
+
+        // Tooltip (ako postoji)
+        $tooltip = $args['tooltip'] ?? '';
 
         switch ( $args['type'] ) {
             case 'number':
@@ -301,36 +310,53 @@ class SettingsPage {
                     printf(
                         '<option value="%s"%s>%s</option>',
                         esc_attr( $opt_key ),
-                        in_array( $opt_key, (array) $value ) ? ' selected' : '',
+                        in_array( $opt_key, (array) $value, true ) ? ' selected' : '',
                         esc_html( $label )
                     );
                 }
                 echo '</select>';
                 break;           
 
-           case 'checkbox':
-            printf(
-                '<label class="order-notifier-switch">
-                    <input type="checkbox" name="%1$s[%2$s]" value="1" %3$s>
-                    <span class="order-notifier-slider"></span>
-                </label> %4$s',
-                esc_attr( Constants::ON_PLUGIN_SETTINGS ),
-                esc_attr( $key ),
-                checked( $value, '1', false ),
-                isset( $args['desc'] ) ? '<span class="switch-label">' . esc_html( $args['desc'] ) . '</span>' : ''
-            );
-            break;
+            case 'checkbox':
+                printf(
+                    '<label class="order-notifier-switch">
+                        <input type="checkbox" name="%1$s[%2$s]" value="1" %3$s>
+                        <span class="order-notifier-slider"></span>
+                    </label> %4$s',
+                    esc_attr( Constants::ON_PLUGIN_SETTINGS ),
+                    esc_attr( $key ),
+                    checked( $value, '1', false ),
+                    isset( $args['desc'] ) ? '<span class="switch-label">' . esc_html( $args['desc'] ) . '</span>' : ''
+                );
+                // za checkbox opis već ide pored → ne trebamo ispod
+                return;
         }
 
-        // if ( isset( $args['desc'] ) && $args['type'] !== 'checkbox' ) {
-        if ( isset( $args['desc'] ) && ! in_array( $args['type'], [ 'checkbox' ], true ) ) {
-            echo '<p class="description">' . esc_html( $args['desc'] ) . '</p>';
+        // Description ispod inputa (s tooltipom)
+        if ( isset( $args['desc'] ) ) {
+            echo '<p class="description"' .
+                ( $tooltip ? ' title="' . esc_attr( $tooltip ) . '"' : '' ) .
+                '>' . esc_html( $args['desc'] ) . '</p>';
         }
     }
+
 
     public function sanitize( $input ) {
         $fields = self::get_settings_fields();
         return $this->sanitize_settings( $input, $fields );
     }
+
+    /**
+     * Pomoćna funkcija koja konvertira vrijednost za prikaz u formi.
+     * Ako polje ima multiplier, vrijednost se podijeli prije prikaza.
+     */
+    private function render_value_for_field( $key, $value, $args ) {
+        // Ako polje ima multiplier, podijeli ga za prikaz
+        if ( isset( $args['multiplier'] ) && is_numeric( $value ) ) {
+            return $value / $args['multiplier'];
+        }
+        return $value;
+    }
+
 }
 
