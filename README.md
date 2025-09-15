@@ -1,6 +1,6 @@
 ## 📖 Dokumentacija
 
-Detaljnu dokumentaciju, primjere korištenja i dodatne informacije pronađite na [Wiki stranici](https://github.com/zvonac99/order-notifier/wiki)).
+Detaljnu dokumentaciju, primjere korištenja i dodatne informacije pronađite na [Wiki stranici](https://github.com/zvonac99/order-notifier/wiki).
 
 # Order Notifier – Generalni opis
 
