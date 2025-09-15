@@ -54,7 +54,7 @@ class StorageHelper {
         delete_user_meta($user_id, $key);
     }
 
-    public static function cleanup_stale_user_meta(string $key, int $max_age_in_seconds): void {
+    public static function cleanup_expired_user_meta(string $key, int $max_age_in_seconds): void {
         $users = get_users(['fields' => ['ID']]);
         $now = time();
 
@@ -480,3 +480,4 @@ class StorageHelper {
 
 
 }
+
