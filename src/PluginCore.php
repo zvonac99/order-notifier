@@ -104,8 +104,8 @@ namespace OrderNotifier;
 
 use OrderNotifier\HooksLoader;
 use OrderNotifier\PluginAssets;
-use OrderNotifier\Admin\SettingsPage;
-use OrderNotifier\Admin\DebugPage;
+use OrderNotifier\Settings\SettingsPage;
+use OrderNotifier\Settings\DebugPage;
 use OrderNotifier\Helpers\ScreenHelper;
 use OrderNotifier\Helpers\UserHelper;
 use OrderNotifier\i18n\Locale;
@@ -209,4 +209,5 @@ class PluginCore {
 		$this->loader->run();
 	}
 	
+
 }
