@@ -8,7 +8,7 @@
  * Here, you will use the previously suggested approach for settings registration.
  * Version 2.0.0
  */
-namespace OrderNotifier\Admin;
+namespace OrderNotifier\Settings;
 use OrderNotifier\Utils\Debug;
 use OrderNotifier\Utils\Constants;
 
@@ -142,4 +142,5 @@ class DebugPage {
     }
 
 }
+
 
