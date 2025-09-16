@@ -17,12 +17,12 @@
  * @method mixed getDefault(array $field, mixed $fallback = null)
  * @method float|int sanitizeNumberWithMultiplier(mixed $value, array $field)
  */
-namespace OrderNotifier\Admin;
+namespace OrderNotifier\Settings;
 
 use OrderNotifier\Utils\Debug;
 use OrderNotifier\Helpers\StorageHelper;
 use OrderNotifier\Utils\Constants;
-use OrderNotifier\Admin\Traits\SettingsSanitizerTrait;
+use OrderNotifier\Settings\Traits\SettingsSanitizerTrait;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -359,4 +359,5 @@ class SettingsPage {
     }
 
 }
+
 
