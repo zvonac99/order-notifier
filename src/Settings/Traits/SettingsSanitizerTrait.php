@@ -1,5 +1,5 @@
 <?php
-namespace OrderNotifier\Admin\Traits;
+namespace OrderNotifier\Settings\Traits;
 
 /**
  * Trait SettingsSanitizerTrait
@@ -149,3 +149,4 @@ trait SettingsSanitizerTrait {
     }
 
 }
+
