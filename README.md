@@ -6,7 +6,7 @@ Detaljnu dokumentaciju, primjere korištenja i dodatne informacije pronađite na
 
 **Order Notifier** je modularni WordPress/WooCommerce plugin koji omogućuje **real-time notifikacije o narudžbama**, praćenje statusa, testne i sistemske evente, te administrativnu kontrolu putem WordPress/WooCommerce Settings API-ja.
 
-Plugin je kompatibilan s **vanjskom SSE biblioteku** (`eliashaeussler/sse`) i prilagođen je WordPress/WooCommerce okruženju.
+Plugin je kompatibilan s **vanjskom SSE biblioteku** [(`eliashaeussler/sse`)](https://github.com/eliashaeussler/sse) i prilagođen je WordPress/WooCommerce okruženju.
 
 ---
 
